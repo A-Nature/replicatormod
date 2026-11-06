@@ -1,0 +1,72 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        maven {
+            name = "forge"
+            url = "http://files.minecraftforge.net/maven"
+        }
+        maven {
+            name = "sonatype"
+            url = "https://oss.sonatype.org/content/repositories/snapshots/"
+        }
+    }
+    dependencies {
+        classpath 'net.minecraftforge.gradle:ForgeGradle:1.2-SNAPSHOT'
+    }
+}
+
+apply plugin: 'forge'
+
+// ForgeGradle 1.2 hardcodes a Mojang S3 URL for the vanilla jars that was
+// retired years ago, so downloadClient/downloadServer always fail. We fetch
+// the jars ourselves from Mojang's current CDN into FG's expected cache
+// paths and disable these tasks so they don't clobber them with a failed
+// download attempt.
+project.afterEvaluate {
+    tasks.findByName('downloadClient')?.enabled = false
+    tasks.findByName('downloadServer')?.enabled = false
+}
+
+version = "1.0.0"
+group = "com.ayaan.replicatormod"
+archivesBaseName = "ayaansinfinityreplication"
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+
+minecraft {
+    version = "1.7.10-10.13.4.1614-1.7.10"
+    runDir = "run"
+}
+
+dependencies {
+}
+
+// Critical: reobf(jar) with no closure defaults its remapping classpath to
+// ArtifactSpec's built-in fallback, which is literally `task.getSource()` —
+// the jar's own contents, not the compile classpath. SpecialSource then has
+// no way to see that e.g. ItemInfinityCopier extends Item, so a call like
+// `this.setMaxDamage(0)` (compiled against ItemInfinityCopier, not Item)
+// never gets resolved up to the inherited method and stays as the MCP name
+// instead of the real SRG name (func_77656_e), causing NoSuchMethodError
+// outside a ForgeGradle dev environment. Explicitly passing the real compile
+// classpath fixes inherited-method remapping across the whole jar.
+reobf {
+    reobf(jar) {
+        it.classpath = sourceSets.main.compileClasspath
+    }
+}
+
+processResources {
+    inputs.property "version", project.version
+    inputs.property "mcversion", project.minecraft.version
+
+    from(sourceSets.main.resources.srcDirs) {
+        include 'mcmod.info'
+        expand 'version': project.version, 'mcversion': project.minecraft.version
+    }
+
+    from(sourceSets.main.resources.srcDirs) {
+        exclude 'mcmod.info'
+    }
+}

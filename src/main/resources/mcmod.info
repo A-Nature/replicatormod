@@ -1,0 +1,16 @@
+[
+{
+    "modid": "ayaansinfinityreplication",
+    "name": "Ayaan's Replicator Mod",
+    "description": "A WorldEdit-style copy/paste/undo tool pair: the Infinity Copier selects and saves a region of blocks, and the Infinity Replicator pastes it back with survival-mode material requirements.",
+    "version": "${version}",
+    "mcversion": "${mcversion}",
+    "url": "",
+    "updateUrl": "",
+    "authorList": ["Ayaan"],
+    "credits": "",
+    "logoFile": "",
+    "screenshots": [],
+    "dependencies": []
+}
+]
